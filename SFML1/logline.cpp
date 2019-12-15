@@ -1,20 +1,10 @@
 #include <string>
 #include <vector>
+#include "logline.h"
 
-
-class logline {
-public:
-	std::uint32_t id;
-	std::uint32_t timestamp;
-	std::uint32_t color;
-	std::string logentry_text;
-
-	logline();
-	logline(std::string log_text);
-	~logline();
-};
-
-
+//
+// Log Line
+//
 logline::logline()
 {
 	id = 0;
@@ -38,19 +28,10 @@ logline::~logline()
 
 }
 
-class logbook
-{
-	std::vector<logline>* plogBook = NULL;
 
-public:
-	logbook();
-	~logbook();
-
-	std::vector<logline> *getlogBook();
-	void addlogEntry(std::string logtext);
-
-};
-
+//
+// Log Book
+//
 logbook::logbook(void)
 {
 	plogBook = new std::vector<logline>;

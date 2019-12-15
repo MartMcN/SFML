@@ -1,7 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <thread>
-#include "logLine.cpp"
+#include "logline.h"
 
 #define DEFAULT_WINDOW_WIDTH_PX		640
 #define DEFAULT_WINDOW_HEIGHT_PX	480
@@ -11,40 +11,52 @@
 
 #define DARK_GREY	0xA9A9A9FF
 
-
 struct _line_points {
 	sf::Vertex line[2];
 };
 
-
 // Global Data
-logbook test_book;
 sf::Font text_font;
-std::vector<sf::Text> lineTextVec;
-std::vector<_line_points> lineTextSepVec;
-uint32_t dispLogentryCount = 0;
-uint16_t screen_width_px = DEFAULT_WINDOW_WIDTH_PX;
-uint16_t screen_height_px = DEFAULT_WINDOW_HEIGHT_PX;
 
-void getDataKeyboard()
+
+class displayMngr {
+private:
+	logbook *test_book;
+	uint32_t dispLogentryCount;
+	uint16_t screen_width_px;
+	uint16_t screen_height_px;
+
+public:
+	displayMngr();
+	~displayMngr();
+	void updateDisplayData();
+	bool checkDisplayUpdated();
+	void setViewSize(uint16_t x, uint16_t y);
+	void genTestData();
+
+public:
+	std::vector<sf::Text> lineTextVec;
+	std::vector<_line_points> lineTextSepVec;
+
+};
+
+displayMngr::displayMngr()
 {
-	char textline[240];
+	dispLogentryCount = 0;
+	screen_width_px = DEFAULT_WINDOW_WIDTH_PX;
+	screen_height_px = DEFAULT_WINDOW_HEIGHT_PX;
 
-	// Add some dumy text
-	test_book.addlogEntry("This is the first go");
-	test_book.addlogEntry("Whats this");
-	test_book.addlogEntry("On no Tony!!!!");
-
-	while (1)
-	{
-		std::cin.getline(textline, 240);
-		test_book.addlogEntry(textline);
-	}
+	test_book = new logbook();
 }
 
-void updateDisplayData()
+displayMngr::~displayMngr()
 {
-	auto plog = test_book.getlogBook();
+
+}
+
+void displayMngr::updateDisplayData()
+{
+	auto plog = test_book->getlogBook();
 
 	// Init the display data for each entry in the log
 	for (dispLogentryCount; dispLogentryCount < plog->size(); dispLogentryCount++)
@@ -70,25 +82,58 @@ void updateDisplayData()
 	}
 }
 
+bool displayMngr::checkDisplayUpdated()
+{
+	auto plog = test_book->getlogBook();
+
+	if (dispLogentryCount < plog->size())
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void displayMngr::setViewSize(uint16_t x, uint16_t y)
+{
+	screen_width_px = x;
+	screen_height_px = y;
+}
+
+
+void displayMngr::genTestData()
+{
+	test_book->addlogEntry("oh no Tony!!!!");	
+}
+
+
 
 int main()
 {
-	// Thread to get text from the console
-	std::thread workerThread(getDataKeyboard);
 
-
-	// Create the Render Window
-	sf::RenderWindow window(sf::VideoMode(screen_width_px, screen_height_px), "LogLine");
-	sf::View view = window.getDefaultView();
-
-	// Load the font
+	// Load the fonts
 	if (!text_font.loadFromFile("CourierPrime-Regular.ttf"))
 	{
 		return 0;
 	}
 
+	// Create the Render Window
+	uint16_t screen_width_px = DEFAULT_WINDOW_WIDTH_PX;
+	uint16_t screen_height_px = DEFAULT_WINDOW_HEIGHT_PX;
+	sf::RenderWindow window(sf::VideoMode(screen_width_px, screen_height_px), "LogLine");
+	sf::View view = window.getDefaultView();
 
-	updateDisplayData();
+	// Create the display Manager
+	displayMngr screenTextLines;
+	// Thread generate some test data
+	screenTextLines.genTestData();
+	screenTextLines.genTestData();
+	screenTextLines.genTestData();
+
+
+	screenTextLines.updateDisplayData();
 
 	while (window.isOpen())
 	{
@@ -122,23 +167,10 @@ int main()
 				std::cout << event.mouseButton.x << " " << event.mouseButton.y << std::endl;
 
 				// Check of there is more entries in the log book.
-				updateDisplayData();
-
-				// More text on a button push.
-				//auto it = lineTextVec.rbegin();
-				//sf::Text lineText = *it;
-				//auto position = lineText.getPosition();
-				//position.y += TEXT_CHAR_HEIGHT;
-				//lineText.setPosition(position);
-				//lineText.setString("NEW");
-				//lineTextVec.push_back(lineText);
-
-				//// Add a seperator line
-				//_line_points lineTextSep;
-				//lineTextSep.line[0] = { sf::Vector2f(0, position.y + TEXT_CHAR_HEIGHT + TEXT_LINE_SEPERATOR_PX), sf::Color(DARK_GREY) };
-				//lineTextSep.line[1] = { sf::Vector2f(screen_width_px, position.y + TEXT_CHAR_HEIGHT + TEXT_LINE_SEPERATOR_PX), sf::Color(DARK_GREY) };
-				//lineTextSepVec.push_back(lineTextSep);
-
+				if (screenTextLines.checkDisplayUpdated())
+				{
+					screenTextLines.updateDisplayData();
+				}
 				break;
 			}
 			}
@@ -147,7 +179,7 @@ int main()
 		window.clear(sf::Color::Black);
 
 		// Draw Line Seperators
-		for (auto it = lineTextSepVec.begin(); it != lineTextSepVec.end(); ++it)
+		for (auto it = screenTextLines.lineTextSepVec.begin(); it != screenTextLines.lineTextSepVec.end(); ++it)
 		{
 			_line_points seperator_line;
 			seperator_line = *it;
@@ -156,7 +188,7 @@ int main()
 		}
 
 		// Draw Text
-		for (auto it = lineTextVec.begin(); it != lineTextVec.end(); ++it)
+		for (auto it = screenTextLines.lineTextVec.begin(); it != screenTextLines.lineTextVec.end(); ++it)
 		{
 			window.draw(*it);
 		}
