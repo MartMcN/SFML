@@ -1,6 +1,8 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <thread>
+#include <chrono>
+#include <string>
 #include "logline.h"
 
 #define DEFAULT_WINDOW_WIDTH_PX		640
@@ -21,7 +23,6 @@ sf::Font text_font;
 
 class displayMngr {
 private:
-	logbook *test_book;
 	uint32_t dispLogentryCount;
 	uint16_t screen_width_px;
 	uint16_t screen_height_px;
@@ -32,9 +33,9 @@ public:
 	void updateDisplayData();
 	bool checkDisplayUpdated();
 	void setViewSize(uint16_t x, uint16_t y);
-	void genTestData();
 
 public:
+	logbook* test_book;
 	std::vector<sf::Text> lineTextVec;
 	std::vector<_line_points> lineTextSepVec;
 
@@ -51,8 +52,8 @@ displayMngr::displayMngr()
 
 displayMngr::~displayMngr()
 {
-
 }
+
 
 void displayMngr::updateDisplayData()
 {
@@ -100,19 +101,32 @@ void displayMngr::setViewSize(uint16_t x, uint16_t y)
 {
 	screen_width_px = x;
 	screen_height_px = y;
+
+
+	for (auto it = lineTextSepVec.begin(); it != lineTextSepVec.end(); ++it)
+	{
+		it->line[1].position.x = screen_width_px;
+	}
+
 }
 
-
-void displayMngr::genTestData()
+void test_data_thread(logbook* ptrlogbook)
 {
-	test_book->addlogEntry("oh no Tony!!!!");	
+	uint16_t x = 0;
+
+	while (1)
+	{ 
+		std::string buffer = "GOOD LORD ";
+		buffer += std::to_string(x);
+		ptrlogbook->addlogEntry(buffer);
+		std::this_thread::sleep_for(std::chrono::seconds(5));
+		x++;
+
+	}
 }
-
-
 
 int main()
 {
-
 	// Load the fonts
 	if (!text_font.loadFromFile("CourierPrime-Regular.ttf"))
 	{
@@ -120,19 +134,16 @@ int main()
 	}
 
 	// Create the Render Window
-	uint16_t screen_width_px = DEFAULT_WINDOW_WIDTH_PX;
-	uint16_t screen_height_px = DEFAULT_WINDOW_HEIGHT_PX;
-	sf::RenderWindow window(sf::VideoMode(screen_width_px, screen_height_px), "LogLine");
+	sf::RenderWindow window(sf::VideoMode(DEFAULT_WINDOW_WIDTH_PX, DEFAULT_WINDOW_HEIGHT_PX), "LogLine");
 	sf::View view = window.getDefaultView();
 
 	// Create the display Manager
 	displayMngr screenTextLines;
-	// Thread generate some test data
-	screenTextLines.genTestData();
-	screenTextLines.genTestData();
-	screenTextLines.genTestData();
 
+	// Thread to generate some test data
+	std::thread worktask(test_data_thread, screenTextLines.test_book);
 
+	// Update the display data
 	screenTextLines.updateDisplayData();
 
 	while (window.isOpen())
@@ -152,8 +163,7 @@ int main()
 			case sf::Event::Resized:
 			{
 				sf::FloatRect visable_area(0, 0, (float)event.size.width, (float)event.size.height);
-				screen_width_px = event.size.width;
-				screen_height_px = event.size.height;
+				screenTextLines.setViewSize(event.size.width, event.size.height);
 				window.setView(sf::View(visable_area));
 				break;
 			}
@@ -163,17 +173,17 @@ int main()
 			}
 			case sf::Event::MouseButtonPressed:
 			{
-				// 
 				std::cout << event.mouseButton.x << " " << event.mouseButton.y << std::endl;
-
-				// Check of there is more entries in the log book.
-				if (screenTextLines.checkDisplayUpdated())
-				{
-					screenTextLines.updateDisplayData();
-				}
 				break;
 			}
 			}
+		}
+
+
+
+		if (screenTextLines.checkDisplayUpdated())
+		{
+			screenTextLines.updateDisplayData();
 		}
 
 		window.clear(sf::Color::Black);
@@ -183,7 +193,6 @@ int main()
 		{
 			_line_points seperator_line;
 			seperator_line = *it;
-			seperator_line.line[1].position.x = screen_width_px;
 			window.draw(seperator_line.line, 2, sf::Lines);
 		}
 
@@ -194,6 +203,8 @@ int main()
 		}
 
 		window.display();
+
+
 	}
 
 	return 0;
