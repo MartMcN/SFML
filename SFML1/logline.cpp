@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include <vector>
 #include "logline.h"
@@ -9,18 +10,20 @@ logline::logline()
 {
 	id = 0;
 	timestamp = 0;
-	color = 0;
 	logentry_text = "";
 }
 
 logline::logline(std::string log_text)
 {
-	id = 0;
-	timestamp = 0;
-	color = 0;
-
-	// Need to check verify is aok data
+	// TODO verify the text
 	logentry_text = log_text;
+	logentry_text_len = log_text.size();
+	
+	// Start off displaying the first character only
+	if(logentry_text_len)
+		logentry_text_len_dspy = 1;
+
+	std::cout << logentry_text << " " << logentry_text_len << std::endl;
 }
 
 logline::~logline()
@@ -48,10 +51,10 @@ std::vector<logline>* logbook::getlogBook()
 }
 void logbook::addlogEntry(std::string logtext)
 {
+
 	logline newLogEntry(logtext);
+	// TODO
 	newLogEntry.id = 0;
 	newLogEntry.timestamp = 0;
-	newLogEntry.color = 0;
-
 	plogBook->push_back(newLogEntry);
 }
