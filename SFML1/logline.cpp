@@ -8,29 +8,28 @@
 //
 logline::logline()
 {
-	id = 0;
-	timestamp = 0;
-	logentry_text = "";
+	logline_id = 0;
+	logline_timestamp = 0;
+	logline_len = 0;
+	logline_len_dspy;
+	logline_text = "";
 }
 
 logline::logline(std::string log_text)
 {
-	// TODO verify the text
-	logentry_text = log_text;
-	logentry_text_len = log_text.size();
-	
-	// Start off displaying the first character only
-	if(logentry_text_len)
-		logentry_text_len_dspy = 1;
-
-	std::cout << logentry_text << " " << logentry_text_len << std::endl;
+	// TOD the string needs to be verified
+	logline_id = 0;
+	logline_timestamp = 0;
+	logline_len = log_text.size();
+	logline_len_dspy = 1;				// Start off displaying the first character only
+	logline_text = "";
+	logline_text = log_text;
 }
 
 logline::~logline()
 {
 
 }
-
 
 //
 // Log Book
@@ -49,12 +48,9 @@ std::vector<logline>* logbook::getlogBook()
 {
 	return plogBook;
 }
-void logbook::addlogEntry(std::string logtext)
+void logbook::createLogBookEntry(std::string logtext)
 {
-
 	logline newLogEntry(logtext);
-	// TODO
-	newLogEntry.id = 0;
-	newLogEntry.timestamp = 0;
+
 	plogBook->push_back(newLogEntry);
 }

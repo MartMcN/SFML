@@ -7,12 +7,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SFML1", "SFML1.vcxproj", "{
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		DEBUG_NEW|x64 = DEBUG_NEW|x64
+		DEBUG_NEW|x86 = DEBUG_NEW|x86
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E05F1D2E-2574-451D-86C4-E51B8FBF8FA0}.DEBUG_NEW|x64.ActiveCfg = DEBUG_NEW|x64
+		{E05F1D2E-2574-451D-86C4-E51B8FBF8FA0}.DEBUG_NEW|x64.Build.0 = DEBUG_NEW|x64
+		{E05F1D2E-2574-451D-86C4-E51B8FBF8FA0}.DEBUG_NEW|x86.ActiveCfg = DEBUG_NEW|Win32
+		{E05F1D2E-2574-451D-86C4-E51B8FBF8FA0}.DEBUG_NEW|x86.Build.0 = DEBUG_NEW|Win32
 		{E05F1D2E-2574-451D-86C4-E51B8FBF8FA0}.Debug|x64.ActiveCfg = Debug|x64
 		{E05F1D2E-2574-451D-86C4-E51B8FBF8FA0}.Debug|x64.Build.0 = Debug|x64
 		{E05F1D2E-2574-451D-86C4-E51B8FBF8FA0}.Debug|x86.ActiveCfg = Debug|Win32
