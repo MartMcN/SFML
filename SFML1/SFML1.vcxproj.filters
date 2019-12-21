@@ -26,5 +26,8 @@
     <ClInclude Include="logline.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="fps.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
