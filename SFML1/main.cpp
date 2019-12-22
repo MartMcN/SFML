@@ -16,10 +16,14 @@
 // Header Row
 // Scroll Bar
 // Stop scrolling when nothing on screen.
-// Why the console
-// Crash on exit
-// Lock needed?
+// Cross compile
+// How to get back the resource window
+// error handling
+// overflow checks
+// text anamations sparkle
 
+// Learning:
+// thread detach?
 
 #define DEFAULT_WINDOW_WIDTH_PX		640
 #define DEFAULT_WINDOW_HEIGHT_PX	480
@@ -90,15 +94,14 @@ void displayMngr::updateDataForView()
 	lineTextVec.clear();
 	lineTextSepVec.clear();
 
+	// Calculate display data starting at top of view
 	postion = getViewVerticalPosition();
-
 	while ((dispLogindex * TEXT_CHAR_HEIGHT_PX) <= postion)
 	{
 		dispLogindex++;
 	}
 	dispLogindex--;
 	//std::cout << "ViewDataUpdate Starts at index " << dispLogindex << std::endl;
-
 
 	for (dispLogindex; dispLogindex < plog->size(); dispLogindex++)
 	{
@@ -183,8 +186,6 @@ void displayMngr::teleType()
 	volatile uint32_t timestamp;
 	uint32_t current_timestamp;
 
-	//std::this_thread::sleep_for(std::chrono::milliseconds(20));
-
 	// Get the time
 	timeTele = clockTele.getElapsedTime();
 	current_timestamp = timeTele.asMilliseconds();
@@ -194,7 +195,6 @@ void displayMngr::teleType()
 	auto plog = test_book->getlogBook();
 
 	// Loop over all log book entries to see if the text needs updating.
-	mtx.lock();
 	for (uint32_t i=0 ; i < plog->size(); ++i)
 	{
 		logline_size = plog->at(i).logline_len;
@@ -217,7 +217,6 @@ void displayMngr::teleType()
 
 		}
 	}
-	mtx.unlock();
 }
 
 
@@ -236,7 +235,6 @@ void test_data_thread(logbook* ptrlogbook)
 		mtx.unlock();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1336));
 		x++;
-
 	}
 }
 
@@ -259,8 +257,13 @@ int main()
 	// Create the display Manager
 	displayMngr screenTextLines;
 
+	// Main thread
+	std::cout << "Main ID:" << std::hex << std::this_thread::get_id() << std::endl << std::dec;
+
 	// Thread to generate some test data
 	std::thread worktask(test_data_thread, screenTextLines.test_book);
+	worktask.detach();
+	std::cout << "TreadId:" << std::hex << worktask.get_id() << std::endl << std::dec;
 
 	// Starts the clock
 	sf::Clock clock;
@@ -279,7 +282,7 @@ int main()
 			case sf::Event::Closed:
 			{
 				window.close();
-				break;
+				return EXIT_SUCCESS;
 			}
 
 			case sf::Event::Resized:
@@ -313,16 +316,18 @@ int main()
 			}
 		}
 
+		mtx.lock();
+
 		// Update the text
 		screenTextLines.teleType();
 
 		// Draw the view
 		screenTextLines.updateDataForView();
 
-		window.clear(sf::Color::Black);
+		mtx.unlock();
 
-		// Is this lock needed??
-		mtx.lock();
+
+		window.clear(sf::Color::Black);
 
 		// Draw Line Seperators
 		for (auto it = screenTextLines.lineTextSepVec.begin(); it != screenTextLines.lineTextSepVec.end(); ++it)
@@ -338,7 +343,7 @@ int main()
 			window.draw(*it);
 		}
 
-		mtx.unlock();
+
 
 		window.display();
 
