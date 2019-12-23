@@ -15,13 +15,15 @@
 // Column Support
 // Scroll Bar
 // Cross compile
-// How to get back the resource window
 // error handling
 // overflow checks
 // text anamations sparkle
+// Console windows stuff
 
 // Learning:
+// view
 // thread detach?
+// How to get back the resource window
 
 #define DEFAULT_WINDOW_WIDTH_PX		640
 #define DEFAULT_WINDOW_HEIGHT_PX	480
@@ -35,7 +37,7 @@
 #define DARK_GREY					0xA9A9A9FF
 
 #define TELETYPE_SPEED_CHAR_MS		27
-#define TEST_GENERATION_SPEED		5
+#define TEST_GENERATION_SPEED		250
 
 struct _line_points {
 	sf::Vertex line[2];
@@ -57,7 +59,7 @@ public:
 	~displayMngr();
 	void updateDataForView();
 
-	void setViewSize(uint16_t x, uint16_t y);
+	void saveViewSize(uint16_t x, uint16_t y);
 	uint16_t getViewSizeX();
 	uint16_t getViewSizeY();
 	void updateViewVerticalPosition(int32_t);
@@ -141,7 +143,6 @@ void displayMngr::updateDataForView()
 		lineTextSep.line[0].color = sf::Color(DARK_GREY);
 		lineTextSep.line[1].position = sf::Vector2f((float)screen_width_px, (float)(((dispLogindex + 1) * TEXT_CHAR_HEIGHT_PX) + TEXT_LINE_SEPERATOR_PX));
 		lineTextSep.line[1].color = sf::Color(DARK_GREY);
-
 		lineTextSepVec.push_back(lineTextSep);
 
 		// Stop display data calculation when the bottom of the view is reached
@@ -154,7 +155,7 @@ void displayMngr::updateDataForView()
 
 }
 
-void displayMngr::setViewSize(uint16_t x, uint16_t y)
+void displayMngr::saveViewSize(uint16_t x, uint16_t y)
 {
 	screen_width_px = x;
 	screen_height_px = y;
@@ -276,7 +277,7 @@ void test_data_thread(logbook* ptrlogbook)
 		mtx.lock();
 		ptrlogbook->createLogBookEntry(buffer);
 		mtx.unlock();
-		std::this_thread::sleep_for(std::chrono::milliseconds(TEST_GENERATION_SPEED));
+		std::this_thread::sleep_for(std::chrono::milliseconds(std::rand() % TEST_GENERATION_SPEED));
 		x++;
 	}
 }
@@ -295,7 +296,7 @@ int main()
 
 	// Create the Render Window
 	sf::RenderWindow window(sf::VideoMode(DEFAULT_WINDOW_WIDTH_PX, DEFAULT_WINDOW_HEIGHT_PX), "LogLine");
-	sf::View view = window.getDefaultView();
+	window.setVerticalSyncEnabled(true);
 
 	// Create the display Manager
 	displayMngr screenTextLines;
@@ -304,7 +305,7 @@ int main()
 	//std::cout << "Main ID:" << std::hex << std::this_thread::get_id() << std::endl << std::dec;
 
 	// Create the header line
-	screenTextLines.test_book->createLogBookHeader("THIS IS THE HEADER");
+	screenTextLines.test_book->createLogBookHeader("THIS IS THE\t\t\tHEADER");
 
 	// Thread to generate some test data
 	std::thread worktask(test_data_thread, screenTextLines.test_book);
@@ -333,8 +334,9 @@ int main()
 
 			case sf::Event::Resized:
 			{
+				// Set the view size to that of the render window
 				sf::FloatRect visable_area(0, (float)screenTextLines.getViewVerticalPosition(), (float)event.size.width, (float)event.size.height);
-				screenTextLines.setViewSize(event.size.width, event.size.height);
+				screenTextLines.saveViewSize(event.size.width, event.size.height);
 				window.setView(sf::View(visable_area));
 				break;
 			}
@@ -345,14 +347,37 @@ int main()
 				{
 					screenTextLines.moveViewVerticalBottom();
 					sf::FloatRect visable_area(0, (float)screenTextLines.getViewVerticalPosition(), (float)screenTextLines.getViewSizeX(), (float)screenTextLines.getViewSizeY());
-					window.setView(sf::View(visable_area));
+					sf::View view(visable_area);
+					window.setView(view);
 				}
+
 				if (event.key.code == key.PageUp)
 				{
 					screenTextLines.moveViewVerticalTop();
-					sf::FloatRect visable_area(0, (float)screenTextLines.getViewVerticalPosition(), (float)screenTextLines.getViewSizeX(), (float)screenTextLines.getViewSizeY());
-					window.setView(sf::View(visable_area));
+					sf::FloatRect visable_area(0, (float)screenTextLines.getViewVerticalPosition(), (float)screenTextLines.getViewSizeX(), (float)screenTextLines.getViewSizeY());					
+					sf::View view(visable_area);
+					window.setView(view);
 				}
+
+				if (event.key.code == key.Z)
+				{
+					// view test
+					sf::FloatRect visable_area(0, (float)screenTextLines.getViewVerticalPosition(), (float)screenTextLines.getViewSizeX()*2, (float)screenTextLines.getViewSizeY());
+					sf::View view(visable_area);
+					window.setView(view);
+				}
+
+				if (event.key.code == key.V)
+				{
+					// Viewport  test
+					sf::FloatRect visable_area(0, (float)screenTextLines.getViewVerticalPosition(), (float)screenTextLines.getViewSizeX(), (float)screenTextLines.getViewSizeY());
+					sf::View view(visable_area);
+					view.setViewport(sf::FloatRect(0, 0, 0.5, 1));
+					window.setView(view);
+				}
+
+
+				break;
 			}
 			case sf::Event::KeyReleased:
 			{
@@ -370,7 +395,8 @@ int main()
 					screenTextLines.updateViewVerticalPosition(MOUSE_WHEEL_MOVE_PX);
 
 				sf::FloatRect visable_area(0, (float)screenTextLines.getViewVerticalPosition(),(float)screenTextLines.getViewSizeX(), (float)screenTextLines.getViewSizeY());
-				window.setView(sf::View(visable_area));
+				sf::View view(visable_area);
+				window.setView(view);
 				//std::cout << screenTextLines.getViewVerticalPosition() << "\n";
 				break;
 			}
@@ -383,11 +409,10 @@ int main()
 		// Update the text
 		screenTextLines.teleType();
 
-		// Draw the view
+		// Update the data thats in the view
 		screenTextLines.updateDataForView();
 
 		mtx.unlock();
-
 
 		window.clear(sf::Color::Black);
 
@@ -404,8 +429,6 @@ int main()
 		{
 			window.draw(*it);
 		}
-
-
 
 		window.display();
 
