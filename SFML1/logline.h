@@ -11,18 +11,23 @@ public:
 
 	logline();
 	logline(std::string log_text);
+	logline(std::string log_text, bool notele);
 	~logline();
 };
 
 class logbook
 {
 private:
+	logline* plogHeader = NULL;
 	std::vector<logline>* plogBook = NULL;
 
 public:
 	logbook();
 	~logbook();
 
-	std::vector<logline>* getlogBook();
+	std::vector<logline>* getLogBook();
 	void createLogBookEntry(std::string logtext);
+
+	logline* getLogBookHeader();
+	void createLogBookHeader(std::string headertext);
 };
