@@ -289,7 +289,7 @@ int main()
 
 	// Load the fonts
 	if (!text_font.loadFromFile("CourierPrime-Regular.ttf"))
-	//if (!text_font.loadFromFile("IBMPlexMono-Regular.ttf"))
+		//if (!text_font.loadFromFile("IBMPlexMono-Regular.ttf"))
 	{
 		return 0;
 	}
@@ -300,6 +300,10 @@ int main()
 
 	// Create the display Manager
 	displayMngr screenTextLines;
+
+	uint32_t testthis{ 5 };
+	uint32_t testthiss (5);
+	uint32_t testthisss = 5;
 
 	// Main thread
 	//std::cout << "Main ID:" << std::hex << std::this_thread::get_id() << std::endl << std::dec;
